@@ -32,7 +32,8 @@ $.widget( "ui.slider", $.ui.mouse, {
 		range: false,
 		step: 1,
 		value: 0,
-		values: null
+		values: null,
+		wraparound: false
 	},
 
 	_create: function() {
@@ -399,7 +400,8 @@ $.widget( "ui.slider", $.ui.mouse, {
 		if ( this.options.values && this.options.values.length ) {
 			otherVal = this.values( index ? 0 : 1 );
 
-			if ( ( this.options.values.length === 2 && this.options.range === true ) && 
+			if ( !this.options.wraparound &&
+					( this.options.values.length === 2 && this.options.range === true ) &&
 					( ( index === 0 && newVal > otherVal) || ( index === 1 && newVal < otherVal ) )
 				) {
 				newVal = otherVal;
@@ -622,26 +624,47 @@ $.widget( "ui.slider", $.ui.mouse, {
 			lastValPercent,
 			value,
 			valueMin,
-			valueMax;
+			valueMax,
+			wrapping = false;
 
 		if ( this.options.values && this.options.values.length ) {
+			if ( this.options.wraparound && this.options.range === true &&
+					self.values(0) > self.values(1)
+				) {
+				if ( self.range.hasClass('ui-widget-header') ) {
+					self.range.removeClass('ui-widget-header').addClass('ui-widget-content');
+					self.element.removeClass('ui-widget-content').addClass('ui-widget-header');
+				}
+				wrapping = true;
+			} else if ( this.options.wraparound && self.range.hasClass('ui-widget-content') ) {
+				self.range.removeClass('ui-widget-content').addClass('ui-widget-header');
+				self.element.removeClass('ui-widget-header').addClass('ui-widget-content');
+			}
+
 			this.handles.each(function( i, j ) {
 				valPercent = ( self.values(i) - self._valueMin() ) / ( self._valueMax() - self._valueMin() ) * 100;
 				_set[ self.orientation === "horizontal" ? "left" : "bottom" ] = valPercent + "%";
 				$( this ).stop( 1, 1 )[ animate ? "animate" : "css" ]( _set, o.animate );
 				if ( self.options.range === true ) {
 					if ( self.orientation === "horizontal" ) {
-						if ( i === 0 ) {
+						if ( i === 0 && !wrapping ) {
 							self.range.stop( 1, 1 )[ animate ? "animate" : "css" ]( { left: valPercent + "%" }, o.animate );
 						}
-						if ( i === 1 ) {
+						if ( i === 1 && wrapping ) {
+							self.range.stop( 1, 1 )[ animate ? "animate" : "css"]( { left: valPercent + "%" }, o.animate );
+							self.range[ animate ? "animate" : "css" ]( { width: ( lastValPercent - valPercent ) + "%" }, { queue: false, duration: o.animate } );
+
+						} else if ( i === 1 ) {
 							self.range[ animate ? "animate" : "css" ]( { width: ( valPercent - lastValPercent ) + "%" }, { queue: false, duration: o.animate } );
 						}
 					} else {
-						if ( i === 0 ) {
+						if ( i === 0 && !wrapping ) {
 							self.range.stop( 1, 1 )[ animate ? "animate" : "css" ]( { bottom: ( valPercent ) + "%" }, o.animate );
 						}
-						if ( i === 1 ) {
+						if ( i === 1 && wrapping ) {
+							self.range.stop( 1, 1 )[ animate ? "animate" : "css" ]( { bottom: ( valPercent ) + "%" }, o.animate );
+							self.range[ animate ? "animate" : "css" ]( { height: ( lastValPercent - valPercent ) + "%" }, { queue: false, duration: o.animate } );
+						} else if ( i === 1 ) {
 							self.range[ animate ? "animate" : "css" ]( { height: ( valPercent - lastValPercent ) + "%" }, { queue: false, duration: o.animate } );
 						}
 					}
