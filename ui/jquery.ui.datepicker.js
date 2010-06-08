@@ -81,6 +81,7 @@ function Datepicker() {
 		showOtherMonths: false, // True to show dates in other months, false to leave blank
 		selectOtherMonths: false, // True to allow selection of dates in other months, false for unselectable
 		showWeek: false, // True to show week of the year, false to not show it
+		showYear: true, // True to show the year, false to not show it
 		calculateWeek: this.iso8601Week, // How to calculate the week of the year,
 			// takes a Date and returns the number of the week for it
 		shortYearCutoff: '+10', // Short year values < this are in the current century,
@@ -1522,6 +1523,7 @@ $.extend(Datepicker.prototype, {
 		var changeMonth = this._get(inst, 'changeMonth');
 		var changeYear = this._get(inst, 'changeYear');
 		var showMonthAfterYear = this._get(inst, 'showMonthAfterYear');
+		var showYear = this._get(inst, 'showYear');
 		var html = '<div class="ui-datepicker-title">';
 		var monthHtml = '';
 		// month selection
@@ -1546,9 +1548,9 @@ $.extend(Datepicker.prototype, {
 		if (!showMonthAfterYear)
 			html += monthHtml + (secondary || !(changeMonth && changeYear) ? '&#xa0;' : '');
 		// year selection
-		if (secondary || !changeYear)
+		if ((secondary || !changeYear) && showYear)
 			html += '<span class="ui-datepicker-year">' + drawYear + '</span>';
-		else {
+		else if (showYear) {
 			// determine range of years to display
 			var years = this._get(inst, 'yearRange').split(':');
 			var thisYear = new Date().getFullYear();
